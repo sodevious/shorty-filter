@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Shorty awards filtering</title>
+    <link
+      href="https://shortyawards.com/static/webflow/css/components.css"
+      rel="stylesheet"
+      type="text/css"
+    />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://shortyawards.com/static/css/application.css"
+    />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://shortyawards.com/static/css/font-awesome.min.css"
+    />
+    <link rel="stylesheet" type="text/css" href="styles.css" />
+    <!-- alpine -->
+    <script
+      defer
+      src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"
+    ></script>
+  </head>
+
+  <body>
+    <section class="wf-section">
+      <div x-data="voting" class="container bottom-lg">
+        <div class="voting-header">
+          <h1 class="heading-secondary font-acumin-condensed color-black">
+            Vote for entries
+          </h1>
+        </div>
+
+        <!-- search bar -->
+        <div class="voting-filter">
+          <div
+            @click.away="isSearchOpen = false"
+            class="voting-filter-search-wrapper"
+          >
+            <a
+              class="voting-filter-search"
+              x-show="!isSearchOpen"
+              @click.self="toggleSearch"
+            >
+              <i class="fa fa-search right-xs"></i>
+              Search for an entry
+            </a>
+            <div
+              x-show="isSearchOpen"
+              x-cloak
+              class="voting-filter-search__input-wrapper"
+            >
+              <input
+                id="search-input"
+                class="form-control"
+                placeholder="Search for an entry..."
+                x-model="search"
+                @input="handleSearch"
+              />
+              <button
+                class="voting-filter-search__input-reset"
+                @click="resetSearch"
+              >
+                X
+              </button>
+            </div>
+            <!-- results dropdown -->
+            <div
+              x-show="isSearchOpen && hasSearchResults"
+              x-cloak
+              class="voting-filter-search__results"
+            >
+              <template x-for="result in searchResults">
+                <div
+                  class="voting-filter-search__results-item"
+                  @click="handleSearchResult(result)"
+                >
+                  <div
+                    class="voting-filter-search__results-item__title-wrapper"
+                  >
+                    <span
+                      x-text="result.title"
+                      class="voting-filter-search__results-item__title"
+                    ></span>
+                    <template x-if="result.type === 'Entry'">
+                      <span
+                        x-text="result.category.title"
+                        class="voting-filter-search__results-item__category"
+                      ></span>
+                    </template>
+                  </div>
+                  <span
+                    x-text="result.type"
+                    class="voting-filter-search__results-item__type"
+                  ></span>
+                </div>
+              </template>
+            </div>
+            <!-- end results dropdown -->
+          </div>
+        </div>
+        <!-- end search bar -->
+
+        <!-- loading -->
+        <div x-show="isLoading" class="block text-xl text-center">
+          <i class="fa fa-spinner fa-spin"></i>
+        </div>
+        <!-- end loading -->
+
+        <!-- searched categories listing -->
+        <template x-if="searchedCategories.length > 0">
+          <div>
+            <template x-for="category in searchedCategories">
+              <!-- category -->
+              <div>
+                <h2
+                  x-text="category.title"
+                  class="heading-primary font-acumin-condensed color-black"
+                ></h2>
+                <div class="grid grid-cols-2 gap-8 my-8 xl:grid-cols-3">
+                  <template x-for="entry in category.entries">
+                    <!-- voting entry -->
+                    <template x-if="entry">
+                      <div class="bottom-lg">
+                        <div class="entry">
+                          <div
+                            class="entry-bg-image"
+                            :style="`background-image: url('${entry?.photo}');`"
+                          ></div>
+                          <div class="entry-container">
+                            <a
+                              :href="entry?.url"
+                              class="entry-title-container"
+                              target="_blank"
+                            >
+                              <div
+                                x-text="entry?.title"
+                                class="entry-title"
+                              ></div>
+                            </a>
+                          </div>
+                        </div>
+
+                        <p
+                          x-html="`${entry?.description}...`"
+                          class="entry-description"
+                        ></p>
+                        <p
+                          class="text-xs top-sm"
+                          x-text="entry.client ? `Produced
+                  by ${entry.produced_by} for ${entry.client}` : `Produced
+                  by ${entry?.produced_by}`"
+                          class="entry-description"
+                        ></p>
+                        <button
+                          class="
+                            btn btn-yellow btn-block btn-lg
+                            js-btn-voting
+                            entry-vote-btn
+                          "
+                        >
+                          Vote
+                        </button>
+                      </div>
+                    </template>
+                    <!-- end voting entry -->
+                  </template>
+                </div>
+              </div>
+              <!-- end category -->
+            </template>
+          </div>
+        </template>
+        <!-- end searched categories listing -->
+
+        <!-- category/entriy listing -->
+        <template x-if="searchedCategories.length === 0">
+          <div>
+            <template x-for="category in displayedCategories">
+              <!-- category -->
+              <div>
+                <h2
+                  x-text="category.title"
+                  class="heading-primary font-acumin-condensed color-black"
+                ></h2>
+                <div class="grid grid-cols-2 gap-8 my-8 xl:grid-cols-3">
+                  <template x-for="entry in category.entries">
+                    <!-- voting entry -->
+                    <template x-if="entry">
+                      <div class="bottom-lg">
+                        <div class="entry">
+                          <div
+                            class="entry-bg-image"
+                            :style="`background-image: url('${entry?.photo}');`"
+                          ></div>
+                          <div class="entry-container">
+                            <a
+                              :href="entry?.url"
+                              class="entry-title-container"
+                              target="_blank"
+                            >
+                              <div
+                                x-text="entry?.title"
+                                class="entry-title"
+                              ></div>
+                            </a>
+                          </div>
+                        </div>
+
+                        <p
+                          x-html="`${entry?.description}...`"
+                          class="entry-description"
+                        ></p>
+                        <p
+                          class="text-xs top-sm"
+                          x-text="entry.client ? `Produced
+                    by ${entry.produced_by} for ${entry.client}` : `Produced
+                    by ${entry?.produced_by}`"
+                          class="entry-description"
+                        ></p>
+                        <button
+                          class="
+                            btn btn-yellow btn-block btn-lg
+                            js-btn-voting
+                            entry-vote-btn
+                          "
+                        >
+                          Vote
+                        </button>
+                      </div>
+                    </template>
+                    <!-- end voting entry -->
+                  </template>
+                </div>
+              </div>
+              <!-- end category -->
+            </template>
+
+            <!-- infinite scroll loading indicator -->
+            <div
+              id="loading-indicator"
+              x-show="!areAllCategoriesDisplayed"
+              class="block text-xl text-center"
+            >
+              <i class="fa fa-spinner fa-spin"></i>
+            </div>
+            <!-- end infinite scroll loading indicator  -->
+          </div>
+        </template>
+        <!-- end category/entriy listing -->
+      </div>
+    </section>
+
+    <script type="text/javascript" src="main.js"></script>
+  </body>
+</html>
